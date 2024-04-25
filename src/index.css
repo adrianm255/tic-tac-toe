@@ -13,7 +13,7 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
+/* a {
   font-weight: 500;
   color: #646cff;
   text-decoration: inherit;
@@ -52,17 +52,43 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
-}
+} */
 
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
     background-color: #ffffff;
   }
-  a:hover {
+  /* a:hover {
     color: #747bff;
   }
   button {
     background-color: #f9f9f9;
-  }
+  } */
+}
+
+.board-row:not(:last-child) {
+  border-bottom: 1px solid white;
+}
+
+.square {
+  width: 100px;
+  height: 100px;
+  background-color: transparent;
+  border: none;
+}
+
+.square:not(:last-child) {
+  border-right: 1px solid white;
+}
+
+.player {
+  padding: 10px;
+  margin: 5px;
+  border: 1px solid gray;
+}
+
+.player.active {
+  border-color: blue;
+  background-color: lightblue;
 }
