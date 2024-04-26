@@ -3,25 +3,16 @@ import Square from "./Square";
 
 interface Props {
   squares: string[];
+  winningLine: number[] | null;
   onClick: (i: number) => void;
 }
 
-const Board: React.FC<Props> = ({ squares, onClick }) => {
-  function renderSquare(i: number) {
-    return <Square value={squares[i]} onClick={() => onClick(i)} />;
-  }
-
+const Board: React.FC<Props> = ({ squares, winningLine, onClick }) => {
   return (
     <div className="game-board">
-      {renderSquare(0)}
-      {renderSquare(1)}
-      {renderSquare(2)}
-      {renderSquare(3)}
-      {renderSquare(4)}
-      {renderSquare(5)}
-      {renderSquare(6)}
-      {renderSquare(7)}
-      {renderSquare(8)}
+      {Array.from({ length: 9 }, (_, i) => (
+        <Square key={i} value={squares[i]} onClick={() => onClick(i)} isWinning={winningLine?.includes(i)} />
+      ))}
     </div>
   );
 };

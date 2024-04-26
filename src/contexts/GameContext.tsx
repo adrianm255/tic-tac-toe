@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { ComputerDifficulty, GameMode, GameSettings } from "../types/game";
 
-interface GameOptionsContextType {
+interface GameContextType {
   options: GameSettings;
-  setOptions: any; // TODO
+  setOptions: React.Dispatch<React.SetStateAction<GameSettings>>;
   gameStarted: boolean;
   startGame: () => void;
   quitGame: () => void;
@@ -16,7 +16,7 @@ const defaultOptions: GameSettings = {
   aiDifficulty: ComputerDifficulty.Easy
 };
 
-const GameOptionsContext = createContext<GameOptionsContextType>({
+const GameContext = createContext<GameContextType>({
   options: defaultOptions,
   setOptions: () => {},
   gameStarted: false,
@@ -24,7 +24,7 @@ const GameOptionsContext = createContext<GameOptionsContextType>({
   quitGame: () => {}
 });
 
-export const useGame = () => useContext(GameOptionsContext);
+export const useGame = () => useContext(GameContext);
 
 export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const [options, setOptions] = useState<GameSettings>(defaultOptions);
@@ -39,8 +39,8 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   };
 
   return (
-    <GameOptionsContext.Provider value={{ options, setOptions, gameStarted, startGame, quitGame }}>
+    <GameContext.Provider value={{ options, setOptions, gameStarted, startGame, quitGame }}>
       {children}
-    </GameOptionsContext.Provider>
+    </GameContext.Provider>
   );
 };

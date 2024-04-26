@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Board from "./Board";
 import Player from "./Player";
 import { useGame } from "../contexts/GameContext";
@@ -9,10 +9,29 @@ const Game: React.FC = () => {
   const [xIsNext, setXIsNext] = useState(options.startingSymbol === "X");
   const [firstTurn, setFirstTurn] = useState(options.startingSymbol);
 
-  const winner = calculateWinner(squares);
+  const { winner, winningLine } = calculateWinner(squares);
   const isGameOver = !!winner || isBoardFull(squares);
   const winningPlayer = winner === 'X' ? 'Player 1 (X)' : 'Player 2 (O)';
   const status = isGameOver ? (winner ? `${winningPlayer} wins!` : 'Tie!') : '';
+
+  const isComputerToMove = () => options.gameMode === "Singleplayer" && !xIsNext;
+
+  useEffect(() => {
+    let timeout: number | undefined;
+    if (isComputerToMove()) {
+      timeout = setTimeout(() => {
+        if (!isGameOver) computerMove();
+      }, 500);
+    } else if (options.timePerMove > 0) {
+      timeout = setTimeout(() => {
+        if (!isGameOver) setXIsNext(!xIsNext);
+      }, options.timePerMove * 1000);
+    }
+
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    }
+  }, [xIsNext, isGameOver]);
 
   const resetGame = () => {
     setSquares(Array(9).fill(null));
@@ -20,7 +39,7 @@ const Game: React.FC = () => {
     setFirstTurn(firstTurn === "X" ? "O" : "X");
   };
 
-  const aiMove = () => {
+  const computerMove = () => {
     let move: any;
     switch (options.aiDifficulty) {
       case 'Easy':
@@ -37,42 +56,24 @@ const Game: React.FC = () => {
   }
   
     if (move.index !== -1) {
-      squares[move.index] = 'O';
-      setSquares(squares);
+      const nextSquares = [...squares];
+      nextSquares[move.index] = 'O';
+      setSquares(nextSquares);
       setXIsNext(!xIsNext);
     }
   };
 
   const handleClick = (i: number) => {
-    // TODO refactor
-    if (options.gameMode === "Singleplayer" && !xIsNext) return;
-    if (calculateWinner(squares) || squares[i]) return;
-    const squaresCopy = [...squares];
-    squaresCopy[i] = xIsNext ? 'X' : 'O';
-    setSquares(squaresCopy);
+    if (isComputerToMove() || isGameOver || squares[i]) return;
+    const nextSquares = [...squares];
+    nextSquares[i] = xIsNext ? 'X' : 'O';
+    setSquares(nextSquares);
     setXIsNext(!xIsNext);
   };
 
-  useEffect(() => {
-    let timeout: number | undefined;
-    if (options.gameMode === "Singleplayer" && !xIsNext) {
-      timeout = setTimeout(() => {
-        if (!isGameOver) aiMove();
-      }, 500);
-    } else if (options.timePerMove > 0) {
-      timeout = setTimeout(() => {
-        if (!isGameOver) setXIsNext(!xIsNext);
-      }, options.timePerMove * 1000);
-    }
-
-    return () => {
-      if (timeout) clearTimeout(timeout);
-    }
-  }, [xIsNext, isGameOver]);
-
   return (
     <div className="game">
-      <Board squares={squares} onClick={handleClick} />
+      <Board squares={squares} onClick={handleClick} winningLine={winningLine} />
       <div className="game-info">
         <div className="player-info">
           <Player name="Player 1" symbol="X" isActive={xIsNext && !isGameOver} timePerMove={options.timePerMove} />
@@ -91,7 +92,7 @@ const Game: React.FC = () => {
   );
 };
 
-const calculateWinner = (squares: (string | null)[]): string | null => {
+const calculateWinner = (squares: (string | null)[]): { winner: string | null, winningLine: number[] | null } => {
   const lines = [
     [0, 1, 2],
     [3, 4, 5],
@@ -105,10 +106,16 @@ const calculateWinner = (squares: (string | null)[]): string | null => {
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[b] === squares[c]) {
-      return squares[a];
+      return {
+        winner: squares[a],
+        winningLine: lines[i]
+      };
     }
   }
-  return null;
+  return {
+    winner: null,
+    winningLine: null
+  };
 }
 
 const isBoardFull = (squares: (string | null)[]) => {
@@ -116,7 +123,7 @@ const isBoardFull = (squares: (string | null)[]) => {
 }
 
 const getBestMove = (squares: (string | null)[], isMaximizing: boolean, depth: number, maxDepth: number) => {
-  const winner = calculateWinner(squares);
+  const { winner } = calculateWinner(squares);
   if (winner === 'X') return { score: -10 };
   else if (winner === 'O') return { score: 10 };
   else if (isBoardFull(squares)) return { score: 0 };

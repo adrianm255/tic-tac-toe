@@ -1,6 +1,6 @@
 import React from "react";
 import { useGame } from "../contexts/GameContext";
-import { ComputerDifficulty, GameMode, TimePerMove } from "../types/game";
+import { ComputerDifficulty, GameMode, GameSettings, TimePerMove } from "../types/game";
 
 const GameOptions: React.FC = () => {
   const { options, setOptions, startGame } = useGame();
@@ -11,7 +11,7 @@ const GameOptions: React.FC = () => {
   };
 
   const setOption = (key: string, value: any) => {
-    setOptions((prevOptions: any) => {
+    setOptions((prevOptions: GameSettings) => {
       return { ...prevOptions, [key]: value }
     });
   };
