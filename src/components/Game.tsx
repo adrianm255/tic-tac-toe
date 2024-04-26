@@ -3,6 +3,94 @@ import Board from "./Board";
 import Player from "./Player";
 import { useGame } from "../contexts/GameContext";
 
+const Game: React.FC = () => {
+  const { options, quitGame } = useGame();
+  const [squares, setSquares] = useState(Array(9).fill(null));
+  const [xIsNext, setXIsNext] = useState(options.startingSymbol === "X");
+  const [firstTurn, setFirstTurn] = useState(options.startingSymbol);
+
+  const winner = calculateWinner(squares);
+  const isGameOver = !!winner || isBoardFull(squares);
+  const winningPlayer = winner === 'X' ? 'Player 1 (X)' : 'Player 2 (O)';
+  const status = isGameOver ? (winner ? `${winningPlayer} wins!` : 'Tie!') : '';
+
+  const resetGame = () => {
+    setSquares(Array(9).fill(null));
+    setXIsNext(firstTurn !== "X");
+    setFirstTurn(firstTurn === "X" ? "O" : "X");
+  };
+
+  const aiMove = () => {
+    let move: any;
+    switch (options.aiDifficulty) {
+      case 'Easy':
+          move = getRandomMove(squares);
+          break;
+      case 'Medium':
+          move = getMediumMove(squares);
+          break;
+      case 'Hard':
+          move = getHardMove(squares);
+          break;
+      default:
+          move = getRandomMove(squares);
+  }
+  
+    if (move.index !== -1) {
+      squares[move.index] = 'O';
+      setSquares(squares);
+      setXIsNext(!xIsNext);
+    }
+  };
+
+  const handleClick = (i: number) => {
+    // TODO refactor
+    if (options.gameMode === "Singleplayer" && !xIsNext) return;
+    if (calculateWinner(squares) || squares[i]) return;
+    const squaresCopy = [...squares];
+    squaresCopy[i] = xIsNext ? 'X' : 'O';
+    setSquares(squaresCopy);
+    setXIsNext(!xIsNext);
+  };
+
+  useEffect(() => {
+    let timeout: number | undefined;
+    if (options.gameMode === "Singleplayer" && !xIsNext) {
+      timeout = setTimeout(() => {
+        if (!isGameOver) aiMove();
+      }, 500);
+    } else if (options.timePerMove > 0) {
+      timeout = setTimeout(() => {
+        if (!isGameOver) setXIsNext(!xIsNext);
+      }, options.timePerMove * 1000);
+    }
+
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    }
+  }, [xIsNext, isGameOver]);
+
+  return (
+    <div className="game">
+      <Board squares={squares} onClick={handleClick} />
+      <div className="game-info">
+        <div className="player-info">
+          <Player name="Player 1" symbol="X" isActive={xIsNext && !isGameOver} timePerMove={options.timePerMove} />
+          <Player name="Player 2" symbol="O" isActive={!xIsNext && !isGameOver} timePerMove={options.timePerMove} />
+        </div>
+      </div>
+      {isGameOver && (<>
+        <div className="game-status">{status}</div>
+        <div className="game-controls">
+          <button className="btn btn-primary" onClick={resetGame}>Play again</button>
+          <button className="btn btn-secondary" onClick={quitGame}>Quit</button>
+        </div>
+      </>)}
+    </div>
+    
+  );
+};
+
 const calculateWinner = (squares: (string | null)[]): string | null => {
   const lines = [
     [0, 1, 2],
@@ -71,89 +159,5 @@ const getRandomMove = (squares: (string | null)[]) => {
   
   return { index: -1 };
 }
-
-const Game: React.FC = () => {
-  const { options, quitGame } = useGame();
-  const [squares, setSquares] = useState(Array(9).fill(null));
-  const [xIsNext, setXIsNext] = useState(options.startingSymbol === "X");
-  const [firstTurn, setFirstTurn] = useState(options.startingSymbol);
-
-  const winner = calculateWinner(squares);
-  const isGameOver = !!winner || isBoardFull(squares);
-  const status = isGameOver ? (winner ? `Winner: ${winner}` : 'Draw') : '';
-
-  const resetGame = () => {
-    setSquares(Array(9).fill(null));
-    setXIsNext(firstTurn !== "X");
-    setFirstTurn(firstTurn === "X" ? "O" : "X");
-  };
-
-  const aiMove = () => {
-    let move: any;
-    switch (options.aiDifficulty) {
-      case 'Easy':
-          move = getRandomMove(squares);
-          break;
-      case 'Medium':
-          move = getMediumMove(squares);
-          break;
-      case 'Hard':
-          move = getHardMove(squares);
-          break;
-      default:
-          move = getRandomMove(squares);
-  }
-  
-    if (move.index !== -1) {
-      squares[move.index] = 'O';
-      setSquares(squares);
-      setXIsNext(!xIsNext);
-    }
-  };
-
-  const handleClick = (i: number) => {
-    // TODO refactor
-    if (options.gameMode === "Singleplayer" && !xIsNext) return;
-    if (calculateWinner(squares) || squares[i]) return;
-    const squaresCopy = [...squares];
-    squaresCopy[i] = xIsNext ? 'X' : 'O';
-    setSquares(squaresCopy);
-    setXIsNext(!xIsNext);
-  };
-
-  useEffect(() => {
-    let timeout: number | undefined;
-    if (options.gameMode === "Singleplayer" && !xIsNext) {
-      timeout = setTimeout(() => {
-        if (!isGameOver) aiMove();
-      }, 500);
-    } else if (options.timePerMove > 0) {
-      timeout = setTimeout(() => {
-        if (!isGameOver) setXIsNext(!xIsNext);
-      }, options.timePerMove * 1000);
-    }
-
-    return () => {
-      if (timeout) clearTimeout(timeout);
-    }
-  }, [xIsNext, isGameOver]);
-
-  return (
-    <div className="game">
-      <Board squares={squares} onClick={handleClick} />
-      <div className="game-info">
-        {isGameOver && (<div>
-          <button onClick={resetGame}>Play again</button>
-          <button onClick={quitGame}>Quit</button>
-        </div>)}
-        <div>{status}</div>
-        <div>
-          <Player name="Player 1" symbol="X" isActive={xIsNext && !isGameOver} />
-          <Player name="Player 2" symbol="O" isActive={!xIsNext && !isGameOver} />
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export default Game;

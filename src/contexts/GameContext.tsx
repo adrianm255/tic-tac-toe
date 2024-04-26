@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import { GameSettings } from "../types/game";
+import { ComputerDifficulty, GameMode, GameSettings } from "../types/game";
 
 interface GameOptionsContextType {
   options: GameSettings;
@@ -10,10 +10,10 @@ interface GameOptionsContextType {
 }
 
 const defaultOptions: GameSettings = {
-  gameMode: "Singleplayer",
+  gameMode: GameMode.Singleplayer,
   startingSymbol: "X",
   timePerMove: 0,
-  aiDifficulty: "Easy"
+  aiDifficulty: ComputerDifficulty.Easy
 };
 
 const GameOptionsContext = createContext<GameOptionsContextType>({
