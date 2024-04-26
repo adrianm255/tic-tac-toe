@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import Board from "./Board";
 import Player from "./Player";
 import { useGame } from "../contexts/GameContext";
+import { ComputerDifficulty } from "../types/game";
 
 const Game: React.FC = () => {
   const { options, quitGame } = useGame();
   const [squares, setSquares] = useState(Array(9).fill(null));
   const [xIsNext, setXIsNext] = useState(options.startingSymbol === "X");
+  // Keep track of who started the current game to alternate first turn in next game
   const [firstTurn, setFirstTurn] = useState(options.startingSymbol);
 
   const { winner, winningLine } = calculateWinner(squares);
@@ -19,10 +21,12 @@ const Game: React.FC = () => {
   useEffect(() => {
     let timeout: number | undefined;
     if (isComputerToMove()) {
+      // Delay computer move by 500ms to make it more human-like
       timeout = setTimeout(() => {
         if (!isGameOver) computerMove();
       }, 500);
     } else if (options.timePerMove > 0) {
+      // Set timeout for player move
       timeout = setTimeout(() => {
         if (!isGameOver) setXIsNext(!xIsNext);
       }, options.timePerMove * 1000);
@@ -42,13 +46,13 @@ const Game: React.FC = () => {
   const computerMove = () => {
     let move: any;
     switch (options.aiDifficulty) {
-      case 'Easy':
+      case ComputerDifficulty.Easy:
           move = getRandomMove(squares);
           break;
-      case 'Medium':
+      case ComputerDifficulty.Medium:
           move = getMediumMove(squares);
           break;
-      case 'Hard':
+      case ComputerDifficulty.Hard:
           move = getHardMove(squares);
           break;
       default:
@@ -122,6 +126,9 @@ const isBoardFull = (squares: (string | null)[]) => {
   return squares.every(square => square !== null);
 }
 
+/**
+ * Minimax algorithm for finding the best move in a given position
+ */
 const getBestMove = (squares: (string | null)[], isMaximizing: boolean, depth: number, maxDepth: number) => {
   const { winner } = calculateWinner(squares);
   if (winner === 'X') return { score: -10 };
@@ -148,14 +155,23 @@ const getBestMove = (squares: (string | null)[], isMaximizing: boolean, depth: n
   return { index: bestIndex, score: bestScore };
 }
 
+/**
+ * Computer move for medium difficulty
+ */
 const getMediumMove = (squares: (string | null)[]) => {
   return getBestMove(squares, true, 0, 1);
 }
 
+/**
+ * Computer move for hard difficulty
+ */
 const getHardMove = (squares: (string | null)[]) => {
   return getBestMove(squares, true, 0, Infinity);
 }
 
+/**
+ * Computer move for easy difficulty
+ */
 const getRandomMove = (squares: (string | null)[]) => {
   const emptyIndexes = squares.map((s, idx) => s === null ? idx : null).filter(idx => idx !== null);
   
