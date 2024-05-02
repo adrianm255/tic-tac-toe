@@ -96,17 +96,32 @@ const Game: React.FC = () => {
   );
 };
 
-const calculateWinner = (squares: (string | null)[]): { winner: string | null, winningLine: number[] | null } => {
-  const lines = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6],
-  ];
+const calculateWinner = (squares: (string | null)[], boardSize: number = 3): { winner: string | null, winningLine: number[] | null } => {
+  const lines: number[][] = [];
+
+  // Generate rows and columns
+  for (let i = 0; i < boardSize; i++) {
+    const row: number[] = [];
+    const col: number[] = [];
+    for (let k = 0; k < boardSize; k++) {
+      row.push(i * boardSize + k);
+      col.push(k * boardSize + i);
+    }
+    lines.push(row);
+    lines.push(col);
+  }
+
+  // Generate diagonals
+  const diagonal1: number[] = [];
+  const diagonal2: number[] = [];
+  for (let i = 0; i < boardSize; i++) {
+    diagonal1.push(i * boardSize + i);
+    diagonal2.push(i * boardSize + (boardSize - i - 1));
+  }
+  lines.push(diagonal1);
+  lines.push(diagonal2);
+
+  // Check for winner
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[b] === squares[c]) {
@@ -116,6 +131,7 @@ const calculateWinner = (squares: (string | null)[]): { winner: string | null, w
       };
     }
   }
+
   return {
     winner: null,
     winningLine: null
